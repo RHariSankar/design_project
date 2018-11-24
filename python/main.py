@@ -10,6 +10,15 @@ fn = r"../datasets/parkinglot_1_480p.mp4"
 fn_yaml = r"../datasets/parking2.yml"
 fn_out = r"../datasets/output.avi"
 
+
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import firestore
+
+cred = credentials.Certificate("./auth-a66ff-firebase-adminsdk-yt9h9-932f8f488b.json")
+firebase_admin.initialize_app(cred)
+db = firestore.client()
+
 config = {'save_video': False,
           'text_overlay': False,
           'parking_overlay': True,
@@ -80,9 +89,9 @@ while(cap.isOpened()):
     # frame_gray = cv2.cvtColor(frame.copy(), cv2.COLOR_BGR2GRAY)
     # Background Subtraction
     frame_blur = cv2.GaussianBlur(frame.copy(), (5,5), 3)
-    cv2.imshow("blur",frame_blur)
+    # cv2.imshow("blur",frame_blur)
     frame_gray = cv2.cvtColor(frame_blur, cv2.COLOR_BGR2GRAY)
-    cv2.imshow("gray",frame_gray)
+    # cv2.imshow("gray",frame_gray)
     frame_out = frame.copy()
     test=frame.copy()
     
@@ -108,11 +117,20 @@ while(cap.isOpened()):
             # If detected a change in parking status, save the current time
             if status != parking_status[ind] and parking_buffer[ind]==None:
                 parking_buffer[ind] = video_cur_pos
+                # print(ind,status)
             # If status is still different than the one saved and counter is open
             elif status != parking_status[ind] and parking_buffer[ind]!=None:
                 if video_cur_pos - parking_buffer[ind] > config['park_sec_to_wait']:
                     parking_status[ind] = status
                     parking_buffer[ind] = None
+                    # print(ind,status)
+                    x=str(ind)
+                    db_ref = db.collection(u'Supermarket').document(x)
+                    if(status==True):
+                        # print("inside if")
+                        db_ref.update({u'occupied': True})
+                    else:
+                        db_ref.update({u'occupied': False})
             # If status is still same and counter is open                    
             elif status == parking_status[ind] and parking_buffer[ind]!=None:
                 #if video_cur_pos - parking_buffer[ind] > config['park_sec_to_wait']:
@@ -158,7 +176,7 @@ while(cap.isOpened()):
     
     # Display video
     cv2.imshow('Parking Detection', frame_out)
-    cv2.imshow("crop",roi_gray)
+    # cv2.imshow("crop",roi_gray)
 
     # cv2.imshow('Laplacian',laplacian)
     cv2.waitKey(40)
