@@ -8,7 +8,7 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
 
-cred = credentials.Certificate("./auth-a66ff-firebase-adminsdk-yt9h9-932f8f488b.json")
+cred = credentials.Certificate("<firebase admin sdk json file>")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 # from matplotlib import pyplot as plt
